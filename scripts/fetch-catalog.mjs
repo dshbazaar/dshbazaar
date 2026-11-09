@@ -6,22 +6,22 @@
  *
  * Env:
  *   GITHUB_TOKEN      optional, raises the GitHub API rate limit; never printed
- *   DSH_MARKET_LIMIT  repositories to keep (default 100, max 300)
- *   DSH_MARKET_PAGES  search pages to walk (default 1, 100 repos per page)
+ *   DSH_MARKET_LIMIT  repositories to keep (default 100, max 1000; the search API caps at 1000)
+ *   DSH_MARKET_PAGES  search pages to walk (default 1, 100 repos per page, max 10)
  */
 import { execFile } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { fetchJson, fetchText, mapPool } from './lib/net.mjs';
+import { fetchJson, fetchText, mapPool, sleep } from './lib/net.mjs';
 
 const run = promisify(execFile);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'data/repos.json');
 
-const LIMIT = Math.min(Number(process.env.DSH_MARKET_LIMIT ?? 100) || 100, 300);
-const PAGES = Math.min(Number(process.env.DSH_MARKET_PAGES ?? 1) || 1, 3);
+const LIMIT = Math.min(Number(process.env.DSH_MARKET_LIMIT ?? 100) || 100, 1000);
+const PAGES = Math.min(Number(process.env.DSH_MARKET_PAGES ?? 1) || 1, 10);
 const TOKEN = process.env.GITHUB_TOKEN?.trim();
 const TOPIC = 'dsh-plugin';
 
@@ -53,6 +53,36 @@ async function headCommit(fullName) {
   } catch {
     return undefined;
   }
+}
+
+/** Plain text of a repository README, trimmed to a size a detail page can show. */
+async function readReadme(fullName, branch) {
+  for (const name of ['README.md', 'README.zh.md', 'README.zh-CN.md', 'readme.md', 'Readme.md']) {
+    const text = await fetchText(`https://raw.githubusercontent.com/${fullName}/${branch}/${name}`);
+    if (text === undefined || text.trim() === '') continue;
+    return toPlainText(text).slice(0, 4000);
+  }
+  return undefined;
+}
+
+/** Strip the Markdown scaffolding a README carries; keep headings and sentences. */
+function toPlainText(markdown) {
+  return markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*>\s?/gm, '')
+    .replace(/^\s*\|.*\|\s*$/gm, ' ')
+    .replace(/^\s*[-=]{3,}\s*$/gm, ' ')
+    .replace(/\*\*|__|~~|`/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\r/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 async function readManifest(fullName, branch) {
@@ -131,12 +161,14 @@ function normalize(repo, manifest, npm, commit) {
 }
 
 async function enrich(item) {
-  const [manifest, commit] = await Promise.all([
-    readManifest(item.full_name, item.default_branch ?? 'main'),
+  const branch = item.default_branch ?? 'main';
+  const [manifest, commit, readme] = await Promise.all([
+    readManifest(item.full_name, branch),
     headCommit(item.full_name),
+    readReadme(item.full_name, branch),
   ]);
   const npm = await npmRelease(manifest?.name);
-  return normalize(item, manifest, npm, commit);
+  return { ...normalize(item, manifest, npm, commit), readme };
 }
 
 async function main() {
@@ -147,6 +179,7 @@ async function main() {
     log(`  search page ${page}: ${found.length} repositories`);
     items.push(...found);
     if (found.length < 100) break;
+    await sleep(1200); // unauthenticated search allows 10 requests a minute
   }
 
   const seen = new Set();

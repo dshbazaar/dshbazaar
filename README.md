@@ -7,7 +7,7 @@
 | 层 | 目录 | 作用 |
 |---|---|---|
 | 数据 | `scripts/fetch-catalog.mjs` → `data/repos.json` | 扫 GitHub `dsh-plugin` 话题，读每个仓库的 `package.json`、npm 发布状态、默认分支 commit |
-| 索引 + 站点 | `scripts/build-index.mjs`、`scripts/build-site.mjs` → `public/` | 生成市场索引（format 1）与中英双语静态站点 |
+| 索引 + 站点 | `scripts/build-index.mjs`、`scripts/build-site.mjs` → `public/` | 生成市场索引（format 1）与中英双语静态站点（SEO 头、结构化数据、分页、教程、三份 sitemap） |
 | 应用内市场 | `packages/dsh-bazaar/` | 一个 DSH 插件，把同一份目录渲染进「设置 → 插件市场」的 `plugins.tab` |
 
 ## 快速开始
@@ -26,15 +26,22 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `GITHUB_TOKEN` | 空 | 提高 GitHub API 限额；不会被打印或写进产物 |
-| `DSH_MARKET_LIMIT` | `100` | 收录仓库数上限（≤ 300） |
-| `DSH_MARKET_PAGES` | `1` | 搜索分页数（每页 100） |
+| `DSH_MARKET_LIMIT` | `100` | 收录仓库数上限（≤ 1000，GitHub 搜索 API 的上限） |
+| `DSH_MARKET_PAGES` | `1` | 搜索分页数（每页 100，≤ 10） |
 | `DSH_MARKET_SITE_URL` | `https://dshbazaar.io` | 站点绝对地址，用于 sitemap 与索引里的 icon 解析 |
 
 ## 产物
 
 - `public/api/index.json` — **市场索引 format 1**，DSH 自带 `dsh-plugin-market` 直接读这个格式。已用 DSH 内置的 `parseMarketIndex` 校验通过。
 - `public/api/catalog.json` — 站点与应用内插件渲染的扁平目录（含 `installSpec`、star、更新时间等）。
-- `public/{zh,en}/…` — 首页、列表、11 个分类页、每个插件的详情页、提交页与关于页。
+- `public/{zh,en}/…` — 首页、分页列表、11 个分类页、每个插件的详情页（含仓库 README 正文）、教程、提交与关于页。
+- `public/sitemap.xml` 是索引，指向 `sitemaps/pages.xml`、`categories.xml`、`plugins.xml`；每个 URL 带 `lastmod` 与 `zh-CN / en / x-default` 三条 alternate。
+
+## SEO 基线
+
+每页都有 canonical、三向 hreflang、Open Graph 与 Twitter 卡片；结构化数据覆盖 `WebSite`（首页）、`CollectionPage` + `ItemList`（列表）、`SoftwareApplication` + `BreadcrumbList`（插件页）、`TechArticle`（教程）。`assets/og.png` 是分享图，`site/assets/` 下维护。
+
+列表按 48 条分页；插件详情页会抓取仓库 README 的纯文本（最多 4000 字符）作为正文，避免薄内容。
 
 ## 收录规则
 

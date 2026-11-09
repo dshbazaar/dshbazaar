@@ -139,6 +139,7 @@ function entryOf(repo) {
     dshTarget: repo.manifest?.dshTarget,
     archived: repo.archived,
     packageName: repo.manifest?.name,
+    readme: repo.readme,
   };
 
   const indexEntry = {
@@ -257,7 +258,10 @@ async function main() {
   };
 
   await writeFile(resolve(OUT_DIR, 'index.json'), `${JSON.stringify(index, null, 2)}\n`);
-  await writeFile(resolve(OUT_DIR, 'catalog.json'), `${JSON.stringify(payload, null, 2)}\n`);
+  // The public catalog stays small: README text is only needed while rendering pages.
+  const publicPlugins = catalog.map(({ readme, ...rest }) => rest);
+  await writeFile(resolve(OUT_DIR, 'catalog.json'), `${JSON.stringify({ ...payload, plugins: publicPlugins }, null, 2)}\n`);
+  await writeFile(resolve(ROOT, 'data/catalog.build.json'), `${JSON.stringify(payload, null, 2)}\n`);
 
   process.stdout.write(`✓ ${catalog.length} plugins · verified ${payload.totals.verified} · npm ${payload.totals.npm}\n`);
   process.stdout.write('  public/api/index.json  (market index format 1)\n');

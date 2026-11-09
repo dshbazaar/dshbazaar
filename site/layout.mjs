@@ -1,5 +1,5 @@
 /** HTML shell, shared fragments and formatting helpers for the static catalog. */
-import { t } from './i18n.mjs';
+import { t, format } from './i18n.mjs';
 import { categoryById } from '../config/categories.mjs';
 
 export const escapeHtml = (value) =>
@@ -38,6 +38,7 @@ function header({ lang, site, active }) {
   const s = t(lang);
   const nav = [
     ['plugins', `/${lang}/plugins/`],
+    ['guides', `/${lang}/guide/`],
     ['submit', `/${lang}/submit/`],
     ['about', `/${lang}/about/`],
   ];
@@ -58,9 +59,9 @@ function footer({ lang, site, generatedAt }) {
 </div></footer>`;
 }
 
-export function page({ lang, site, title, description, body, active, generatedAt }) {
+export function page({ lang, site, title, description, body, active, generatedAt, headExtra = '', appendBrand = true }) {
   const s = t(lang);
-  const fullTitle = title === undefined ? `${s.brand} · ${s.tagline}` : `${title} · ${s.brand}`;
+  const fullTitle = title === undefined ? `${s.brand} · ${s.tagline}` : appendBrand ? `${title} · ${s.brand}` : title;
   return `<!doctype html>
 <html lang="${lang === 'zh' ? 'zh-CN' : 'en'}">
 <head>
@@ -70,6 +71,7 @@ export function page({ lang, site, title, description, body, active, generatedAt
 <meta name="description" content="${escapeHtml(description ?? s.heroBody)}">
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+${headExtra}
 </head>
 <body>
 ${header({ lang, site, active })}
@@ -82,10 +84,10 @@ ${footer({ lang, site, generatedAt })}
 `;
 }
 
-export function card(plugin, lang) {
+export function card(plugin, lang, description) {
   const s = t(lang);
   const category = categoryById(plugin.category);
-  const desc = localized(plugin.description, lang);
+  const desc = description ?? localized(plugin.description, lang);
   return `<a class="card" href="${pluginPath(plugin, lang)}">
   <div class="top">
     ${plugin.iconUrl ? `<img class="avatar" src="${escapeHtml(plugin.iconUrl)}" alt="" loading="lazy">` : ''}
@@ -94,6 +96,7 @@ export function card(plugin, lang) {
   <p class="desc">${escapeHtml(desc)}</p>
   <div class="foot">
     <span class="cat-tag">${escapeHtml(localized(category.title, lang))}</span>
+    <span>${escapeHtml(plugin.author ?? '')}</span>
     <span>★ ${fmtNumber(plugin.stars)}</span>
     ${plugin.verified ? `<span class="badge ok">${escapeHtml(s.verified)}</span>` : ''}
   </div>
@@ -102,7 +105,7 @@ export function card(plugin, lang) {
 
 export function searchForm(lang, value = '') {
   const s = t(lang);
-  return `<form class="search" action="/${lang}/plugins/" method="get">
+  return `<form class="search" action="/${lang}/search/" method="get">
   <input type="search" name="q" value="${escapeHtml(value)}" placeholder="${escapeHtml(s.searchPlaceholder)}" aria-label="${escapeHtml(s.searchPlaceholder)}">
   <button type="submit">${lang === 'zh' ? '搜索' : 'Search'}</button>
 </form>`;
@@ -136,4 +139,37 @@ export function installPanel(lang, { command, indexUrl }) {
     </div>
   </div>
 </div></section>`;
+}
+
+
+/** Two-sentence summary for list cards; detail pages keep the full text. */
+export function summarize(value, lang, max = 120) {
+  const text = String(localized(value, lang) ?? '')
+    .replace(/\s+/gu, ' ')
+    .trim();
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const stop = Math.max(cut.lastIndexOf('。'), cut.lastIndexOf('. '), cut.lastIndexOf('；'), cut.lastIndexOf('; '));
+  return `${(stop > max * 0.5 ? cut.slice(0, stop) : cut).trim()}…`;
+}
+
+/** Breadcrumb trail plus its structured data. */
+export function breadcrumbs(items) {
+  const trail = items
+    .map((item, index) => (index === items.length - 1
+      ? `<span aria-current="page">${escapeHtml(item.name)}</span>`
+      : `<a href="${escapeHtml(item.href)}">${escapeHtml(item.name)}</a>`))
+    .join('<span class="sep">/</span>');
+  return `<nav class="crumbs" aria-label="Breadcrumb">${trail}</nav>`;
+}
+
+/** Page links for one paginated list. */
+export function pagination({ lang, basePath, page, total, s }) {
+  if (total <= 1) return '';
+  const href = (n) => (n === 1 ? basePath : `${basePath}${n}/`);
+  const parts = [];
+  if (page > 1) parts.push(`<a rel="prev" href="${href(page - 1)}">← ${escapeHtml(s.prev)}</a>`);
+  parts.push(`<span class="current">${escapeHtml(format(s.pageOf, { n: page, total }))}</span>`);
+  if (page < total) parts.push(`<a rel="next" href="${href(page + 1)}">${escapeHtml(s.next)} →</a>`);
+  return `<nav class="pager" aria-label="${escapeHtml(s.pagination)}">${parts.join('')}</nav>`;
 }

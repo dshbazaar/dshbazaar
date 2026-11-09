@@ -17,6 +17,42 @@
     });
   }
 
+  // Search page: filter the whole catalog client-side.
+  const searchPage = document.querySelector('[data-search-page]');
+  if (searchPage !== null) {
+    const input = searchPage.querySelector('[data-search-input]');
+    const results = searchPage.querySelector('[data-search-results]');
+    const empty = searchPage.querySelector('[data-search-empty]');
+    const params = new URLSearchParams(location.search);
+    const initial = params.get('q') ?? '';
+    if (input !== null) input.value = initial;
+
+    const render = async (query) => {
+      const text = query.trim().toLowerCase();
+      if (text === '') { results.innerHTML = ''; empty.hidden = true; return; }
+      const response = await fetch('/api/catalog.json');
+      const data = await response.json();
+      const hits = (data.plugins ?? []).filter((plugin) => {
+        const title = typeof plugin.title === 'string' ? plugin.title : (plugin.title?.zh ?? plugin.title?.en ?? '');
+        const desc = typeof plugin.description === 'string' ? plugin.description : (plugin.description?.zh ?? plugin.description?.en ?? '');
+        return [title, desc, plugin.name, ...(plugin.topics ?? [])].join(' ').toLowerCase().includes(text);
+      }).slice(0, 60);
+      results.innerHTML = hits.map((plugin) => {
+        const slug = (plugin.repoUrl ?? '').replace('https://github.com/', '');
+        const title = typeof plugin.title === 'string' ? plugin.title : (plugin.title?.zh ?? plugin.title?.en ?? plugin.name);
+        const desc = typeof plugin.description === 'string' ? plugin.description : (plugin.description?.zh ?? plugin.description?.en ?? '');
+        return `<a class="card" href="/${document.documentElement.lang === 'en' ? 'en' : 'zh'}/p/${slug}/">
+  <div class="top"><h3>${title.replace(/[<&>]/g, '')}</h3></div>
+  <p class="desc">${String(desc).slice(0, 140).replace(/[<&>]/g, '')}</p>
+  <div class="foot"><span>★ ${plugin.stars ?? 0}</span></div>
+</a>`;
+      }).join('');
+      empty.hidden = hits.length !== 0;
+    };
+
+    if (initial !== '') render(initial);
+  }
+
   const grid = document.querySelector('[data-grid]');
   if (grid === null) return;
 
