@@ -1,0 +1,14 @@
+docs/decisions.md
+  h_407642ed4ce5a5 1-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "99f1cfb99e511f2a26cd62829e06f194fda6421b",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
