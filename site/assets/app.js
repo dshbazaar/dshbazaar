@@ -1,7 +1,25 @@
-/** Client-side filtering and sorting for the catalog grid. */
+/** Copy-to-clipboard buttons, plus client-side filtering and sorting for the catalog grid. */
 (() => {
+  for (const button of document.querySelectorAll('[data-copy]')) {
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? '');
+      } catch {
+        return;
+      }
+      const label = button.textContent;
+      button.textContent = button.dataset.copiedLabel ?? label;
+      button.disabled = true;
+      setTimeout(() => {
+        button.textContent = label;
+        button.disabled = false;
+      }, 1500);
+    });
+  }
+
   const grid = document.querySelector('[data-grid]');
   if (grid === null) return;
+
   const cards = [...grid.querySelectorAll('[data-card]')];
   const search = document.querySelector('[data-search]');
   const sort = document.querySelector('[data-sort]');
@@ -16,8 +34,7 @@
     const query = (search?.value ?? '').trim().toLowerCase();
     let shown = 0;
     for (const card of cards) {
-      const haystack = card.dataset.search ?? '';
-      const matchesText = query === '' || haystack.includes(query);
+      const matchesText = query === '' || (card.dataset.search ?? '').includes(query);
       const matchesVerified = verified === null || !verified.checked || card.dataset.verified === 'true';
       const visible = matchesText && matchesVerified;
       card.hidden = !visible;

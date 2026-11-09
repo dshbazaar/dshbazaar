@@ -1,18 +1,28 @@
 {
   "name": "dsh-bazaar",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Community plugin market for DeepSeek Harness: browse and install catalogued plugins from the Plugins page. · DeepSeek Harness 社区插件市场：在插件页浏览并安装目录里的插件。",
   "type": "module",
   "main": "lib/index.js",
   "license": "MIT",
-  "keywords": ["dsh", "dsh-plugin", "deepseek-harness", "plugin-market"],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "plugin-market"
+  ],
   "exports": {
     ".": "./lib/index.js",
     "./client": "./client/client.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
-  "files": ["lib", "client", "cordis.patch.yml", "README.md"],
+  "files": [
+    "lib",
+    "client",
+    "cordis.patch.yml",
+    "README.md"
+  ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

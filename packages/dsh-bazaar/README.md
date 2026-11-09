@@ -2,13 +2,17 @@
 
 DSH 插件：把 [DSH 插件市场](https://dshbazaar.io) 的目录渲染成插件页里的一个标签页。
 
-- 宿主半侧：`GET /api/dsh-bazaar/catalog`，同源代理并缓存目录（默认 10 分钟）。
-- 浏览器半侧：向 `plugins.tab` 注册「市场」标签页，搜索、按分类过滤、一键安装。
+- 宿主半侧：`GET /api/dsh-bazaar/catalog` 代理并缓存目录；`GET /api/dsh-bazaar/installed` 读取 `pluginManager.listBundles()`。
+- 浏览器半侧：向 `plugins.tab` 注册「市集」标签页，含发现 / 已安装 / 更新三个视图，支持搜索、分类过滤与一键安装。
 - 安装走插件页 owner 提供的 `install()`，不自己调 pnpm。
 
 ## 安装
 
 ```bash
+# 从 GitHub（仓库子目录）
+dsh plugin --profile web add 'git+https://github.com/dshbazaar/dshbazaar.git#main&path:/packages/dsh-bazaar'
+
+# 或本地目录
 dsh plugin --profile web add /绝对路径/packages/dsh-bazaar
 ```
 

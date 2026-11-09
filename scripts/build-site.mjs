@@ -14,6 +14,7 @@ import { LANGS, t } from '../site/i18n.mjs';
 import {
   card,
   escapeHtml,
+  installPanel,
   fmtDate,
   fmtNumber,
   localized,
@@ -33,6 +34,10 @@ const write = async (path, contents) => {
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, contents);
 };
+
+/** The command that installs this market plugin into DSH; the package lives in a repository subdirectory. */
+const INSTALL_COMMAND =
+  "dsh plugin --profile web add 'git+https://github.com/dshbazaar/dshbazaar.git#main&path:/packages/dsh-bazaar'";
 
 const sortedByStars = (plugins) => [...plugins].sort((left, right) => right.stars - left.stars);
 
@@ -65,6 +70,7 @@ function homePage(catalog, lang) {
     ${stat(fmtNumber(totals.stars), s.stats.stars)}
   </div>
 </div></section>
+${installPanel(lang, { command: INSTALL_COMMAND, indexUrl: `${SITE_URL}/api/index.json` })}
 
 <section class="block"><div class="wrap">
   <div class="section-head"><div><h2>${escapeHtml(s.categoriesTitle)}</h2><p>${escapeHtml(s.categoriesBody)}</p></div>

@@ -53,10 +53,18 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 dsh plugin --profile web add /绝对路径/dsh-bazaar/packages/dsh-bazaar
 ```
 
-它只做两件事：
+它做两件事：
 
-- 宿主半侧注册 `GET /api/dsh-bazaar/catalog`，同源代理并缓存目录（浏览器半侧不直连第三方域）；
-- 浏览器半侧向 `plugins.tab` 注册一个「市场」标签页，列出目录并提供安装按钮；安装调用标签页 owner 提供的 `install({ spec, registry, title, version })`，**实际安装仍由宿主插件管理器执行**。
+- 宿主半侧注册两条同源路由：`GET /api/dsh-bazaar/catalog`（代理并缓存目录）与 `GET /api/dsh-bazaar/installed`（读宿主 `pluginManager.listBundles()`，供已安装与更新判断）；
+- 浏览器半侧向 `plugins.tab` 注册一个「市集」标签页，内含 **发现 / 已安装 / 更新** 三个视图；安装调用标签页 owner 提供的 `install({ spec, registry, title, version })`，**实际安装仍由宿主插件管理器执行**。
+
+从仓库安装（尚未发布 npm）：
+
+```bash
+dsh plugin --profile web add 'git+https://github.com/dshbazaar/dshbazaar.git#main&path:/packages/dsh-bazaar'
+```
+
+本地开发时也可以直接装目录：`dsh plugin --profile web add /绝对路径/packages/dsh-bazaar`。
 
 `node scripts/test-plugin.mjs` 会验证：客户端 bundle 能在 `window.__ModuleLoader__` 下加载并注册 `plugins.tab`、字典注册成功、宿主路由注册成功并返回目录 JSON。它**不**验证标签页在真实 DSH 里的渲染效果。
 

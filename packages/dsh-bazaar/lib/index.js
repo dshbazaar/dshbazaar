@@ -1,10 +1,14 @@
 /**
  * Host half of dsh-bazaar.
  *
- * The browser half must not fetch a third-party origin directly (CORS, offline, and
- * privacy), so the host serves the catalog same-origin under /api/dsh-bazaar and
- * caches it. Installing still goes through the host plugin manager, which the Plugins
- * page owns; this plugin never runs pnpm itself.
+ * Two same-origin routes back the browser half:
+ *
+ *   GET /api/dsh-bazaar/catalog    the public catalog, cached for ten minutes
+ *   GET /api/dsh-bazaar/installed  the bundles this profile has, from the host plugin manager
+ *
+ * The browser half never fetches a third-party origin directly, and installing still goes
+ * through the host plugin manager (the Plugins page owns the `install` action); this
+ * plugin never runs pnpm itself.
  */
 
 /** Default catalog produced by this repository's build. */
@@ -25,8 +29,9 @@ function json(value, status = 200) {
 }
 
 /**
+ * Proxy and cache the public catalog.
  * @param {{ catalogUrl?: string, timeoutMs?: number }} config
- * @returns {{ path: string, methods: string[], fetch: (request: Request) => Promise<Response> }}
+ * @returns {{ path: string, methods: string[], fetch: () => Promise<Response> }}
  */
 export function catalogRoute(config = {}) {
   const catalogUrl = config.catalogUrl ?? DEFAULT_CATALOG_URL;
@@ -60,11 +65,53 @@ export function catalogRoute(config = {}) {
   };
 }
 
+/** Only what the browser half needs from a BundleInfo; keeps the profile's file layout out of the page. */
+function slimBundle(bundle) {
+  return {
+    name: bundle.name,
+    version: bundle.version,
+    installed: bundle.installed === true,
+    enabled: bundle.enabled === true,
+    official: bundle.official === true,
+    source: bundle.source,
+    availability: bundle.availability,
+    updatable: bundle.updatable === true,
+    removable: bundle.removable === true,
+  };
+}
+
+/**
+ * Report the bundles this profile holds, so the tab can mark installed versions and find updates.
+ * @param {() => Promise<Array<object>>} listBundles host plugin manager entry point
+ * @returns {{ path: string, methods: string[], fetch: () => Promise<Response> }}
+ */
+export function installedRoute(listBundles) {
+  return {
+    path: `${ROUTE_PREFIX}/installed`,
+    methods: ['GET'],
+    fetch: async () => {
+      try {
+        const bundles = await listBundles();
+        return json({ bundles: (Array.isArray(bundles) ? bundles : []).map(slimBundle) });
+      } catch {
+        return json({ error: 'plugin manager listing failed' }, 502);
+      }
+    },
+  };
+}
+
 export function apply(ctx, config = {}) {
-  ctx.inject(['connection'], (scope) => {
+  ctx.inject(['connection', 'pluginManager'], (scope) => {
     scope.effect(
       () => scope.connection.fetch.register({ ...catalogRoute(config), requestBody: 'buffered' }),
       'dsh-bazaar: catalog route',
+    );
+    scope.effect(
+      () => scope.connection.fetch.register({
+        ...installedRoute(() => scope.pluginManager.listBundles()),
+        requestBody: 'buffered',
+      }),
+      'dsh-bazaar: installed route',
     );
   });
 }

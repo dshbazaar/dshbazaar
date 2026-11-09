@@ -111,3 +111,29 @@ export function searchForm(lang, value = '') {
 export function stat(value, label) {
   return `<div class="stat"><div class="n">${escapeHtml(value)}</div><div class="k">${escapeHtml(label)}</div></div>`;
 }
+
+/** The install panel shown on the home page: a copyable command plus the index alternative. */
+export function installPanel(lang, { command, indexUrl }) {
+  const s = t(lang);
+  return `<section class="block install"><div class="wrap">
+  <div class="install-card">
+    <div class="install-main">
+      <h2>${escapeHtml(s.installPanelTitle)}</h2>
+      <p>${escapeHtml(s.installPanelBody)}</p>
+      <div class="install-command">
+        <pre class="code"><span class="p">$</span> ${escapeHtml(command)}</pre>
+        <button class="copy" type="button" data-copy="${escapeHtml(command)}" data-copied-label="${escapeHtml(s.copied)}">${escapeHtml(s.copy)}</button>
+      </div>
+      <div class="note">${escapeHtml(s.installPanelNote)}</div>
+    </div>
+    <div class="install-side">
+      <h3>${escapeHtml(s.indexPanelTitle)}</h3>
+      <p>${escapeHtml(s.indexPanelBody)}</p>
+      <div class="install-command">
+        <pre class="code">${escapeHtml(indexUrl)}</pre>
+        <button class="copy" type="button" data-copy="${escapeHtml(indexUrl)}" data-copied-label="${escapeHtml(s.copied)}">${escapeHtml(s.copy)}</button>
+      </div>
+    </div>
+  </div>
+</div></section>`;
+}

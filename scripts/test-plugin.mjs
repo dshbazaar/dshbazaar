@@ -66,10 +66,11 @@ client.apply({
 
 assert.equal(registered.length, 1, 'apply must register exactly one slot entry');
 assert.equal(registered[0].definition.name, 'plugins.tab', 'entry belongs to the plugins tab slot');
-assert.equal(registered[0].definition.id, 'hub');
+assert.equal(registered[0].definition.id, 'bazaar');
 assert.equal(typeof registered[0].definition.label, 'function');
 assert.equal(dictionaries.length, 1, 'dictionaries are registered once');
-assert.equal(dictionaries[0].table.zh.title, '市场');
+assert.equal(dictionaries[0].table.zh.title, '市集');
+assert.equal(dictionaries[0].table.en.title, 'Bazaar');
 process.stdout.write('✓ client bundle: loads, registers plugins.tab, registers zh/en dictionaries\n');
 
 /* ---------- host half ---------- */
@@ -90,23 +91,37 @@ try {
   assert.equal(typeof host.apply, 'function');
 
   const routes = [];
+  const bundles = [
+    { name: 'dsh-bazaar', version: '0.2.0', installed: true, enabled: true, official: false, source: 'file:', availability: 'profile', updatable: false, removable: true, rows: [] },
+    { name: 'left-pad-dsh', version: '1.0.0', installed: true, enabled: false, official: false, source: 'npm', availability: 'profile', updatable: false, removable: true, rows: [] },
+  ];
   host.apply({
     inject: (_services, factory) => factory({
       effect: (fn) => { fn(); },
       connection: { fetch: { register: (route) => { routes.push(route); return () => {}; } } },
+      pluginManager: { listBundles: async () => bundles },
     }),
   }, { catalogUrl });
 
-  assert.equal(routes.length, 1, 'host must register one route');
-  assert.equal(routes[0].path, '/api/dsh-bazaar/catalog');
-  assert.deepEqual(routes[0].methods, ['GET']);
-  process.stdout.write('✓ host half: registered GET /api/dsh-bazaar/catalog\n');
+  assert.equal(routes.length, 2, 'host must register two routes');
+  assert.deepEqual(routes.map((route) => route.path).sort(), ['/api/dsh-bazaar/catalog', '/api/dsh-bazaar/installed']);
+  process.stdout.write('✓ host half: registered catalog and installed routes\n');
 
   const response = await routes[0].fetch(new Request('http://localhost/api/dsh-bazaar/catalog'));
-  assert.equal(response.status, 200, 'route must answer 200 while the catalog is reachable');
+  assert.equal(response.status, 200, 'catalog route must answer 200 while the catalog is reachable');
   const body = await response.json();
-  assert.ok(Array.isArray(body.plugins) && body.plugins.length > 0, 'route must return catalog plugins');
-  process.stdout.write(`✓ route: served ${body.plugins.length} plugins from a local catalog fixture\n`);
+  assert.ok(Array.isArray(body.plugins) && body.plugins.length > 0, 'catalog route must return plugins');
+  process.stdout.write(`✓ catalog route: served ${body.plugins.length} plugins from a local fixture\n`);
+
+  const installed = routes.find((route) => route.path.endsWith('/installed'));
+  const listing = await installed.fetch(new Request('http://localhost/api/dsh-bazaar/installed'));
+  assert.equal(listing.status, 200, 'installed route must answer 200');
+  const listed = await listing.json();
+  assert.equal(listed.bundles.length, 2, 'installed route reports every bundle');
+  assert.equal(listed.bundles[0].name, 'dsh-bazaar');
+  assert.equal(listed.bundles[1].enabled, false);
+  assert.ok(!('rows' in listed.bundles[0]), 'installed route keeps unneeded bundle fields out');
+  process.stdout.write(`✓ installed route: reported ${listed.bundles.length} bundles with slim fields\n`);
 } finally {
   await new Promise((done) => catalogServer.close(done));
 }
