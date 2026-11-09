@@ -1,0 +1,34 @@
+.github/workflows/catalog.yml
+  h_407642ed4ce5a5 25-26
+.gitignore
+  h_407642ed4ce5a5 3
+README.md
+  h_407642ed4ce5a5 10,29-30,37-44
+scripts/build-index.mjs
+  h_407642ed4ce5a5 142,261-264
+scripts/build-site.mjs
+  h_407642ed4ce5a5 5-8,14-15,17,24,29,31-39,43-48,57-59,72-74,77,82,87-101,105-108,123,126-127,132,134,137-152,157-158,161-181,188-207,222-228,233,238-240,244-254,261,264,268-269,273-561,570,576,581-593,601,606,612-624,629,636-650,652-658,662,665,670-686,688-693,695,698,702,706-722,724-728,735-737
+scripts/fetch-catalog.mjs
+  h_407642ed4ce5a5 9-10,17,23-24,58-87,164-166,168,171,182
+site/assets/app.js
+  h_407642ed4ce5a5 20-55
+site/guides.mjs
+  h_407642ed4ce5a5 1-183
+site/i18n.mjs
+  h_407642ed4ce5a5 10,14,22,31,38,42-47,58-75,95-99,107-108,113,115,119,136,143,147-152,163-180,200-204,212-213,218-221
+site/layout.mjs
+  h_407642ed4ce5a5 2,41,62,64,74,87,90,99,108,143-175
+site/seo.mjs
+  h_407642ed4ce5a5 1-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5a5df0e2d10a8462e93d5f8046477514fd7e768c",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
