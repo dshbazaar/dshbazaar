@@ -16,7 +16,7 @@ import { CATEGORIES, inferCategory } from '../config/categories.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = resolve(ROOT, 'data/repos.json');
 const OUT_DIR = resolve(ROOT, 'public/api');
-const SITE_URL = process.env.DSH_MARKET_SITE_URL ?? 'https://dshbazaar.io';
+const SITE_URL = process.env.DSH_MARKET_SITE_URL?.trim() || 'https://dshbazaar.io';
 
 const PACKAGE_NAME = /^(?:@[a-z0-9][a-z0-9._~-]*\/)?[a-z0-9][a-z0-9._~-]*$/u;
 const SEMVER = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;

@@ -26,7 +26,7 @@ import {
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'public');
-const SITE_URL = process.env.DSH_MARKET_SITE_URL ?? 'https://dshbazaar.io';
+const SITE_URL = process.env.DSH_MARKET_SITE_URL?.trim() || 'https://dshbazaar.io';
 
 const write = async (path, contents) => {
   const target = resolve(OUT, path);

@@ -26,7 +26,7 @@ if (VALIDATOR === undefined || VALIDATOR === '') {
 
 const { parseMarketIndex, marketInstallTarget } = await import(pathToFileURL(resolve(VALIDATOR)).href);
 const document = JSON.parse(await readFile(resolve(ROOT, 'public/api/index.json'), 'utf8'));
-const siteUrl = process.env.DSH_MARKET_SITE_URL ?? 'https://dshbazaar.io';
+const siteUrl = process.env.DSH_MARKET_SITE_URL?.trim() || 'https://dshbazaar.io';
 
 try {
   const parsed = parseMarketIndex(document, `${siteUrl}/api/index.json`);
