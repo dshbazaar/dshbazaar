@@ -1,0 +1,18 @@
+scripts/build-index.mjs
+  h_407642ed4ce5a5 19
+scripts/build-site.mjs
+  h_407642ed4ce5a5 29
+scripts/validate-index.mjs
+  h_407642ed4ce5a5 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0e65d1ca157e1153788e1257d95dc3f3177dc62d",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
