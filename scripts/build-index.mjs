@@ -166,6 +166,37 @@ function entryOf(repo) {
   return { catalog, indexEntry, version };
 }
 
+/**
+ * A community repository must not present its package under the official scope:
+ * `name` is what the market shows, and a Git entry installs that repository's code.
+ * Official repositories are the only ones allowed to use `@deepseek-ai/`.
+ */
+function spoofsOfficialScope(entry) {
+  const owner = entry.catalog.author?.toLowerCase();
+  return entry.catalog.name.startsWith('@deepseek-ai/') && owner !== 'deepseek-ai';
+}
+
+/**
+ * Format 1 requires one entry per package name. `entries` is already ordered
+ * (verified first, then stars), so the first entry wins and the rest are reported
+ * for review instead of silently shipping an index DSH rejects.
+ */
+function dedupeByName(entries, log) {
+  const byName = new Map();
+  const kept = [];
+  for (const entry of entries) {
+    const name = entry.catalog.name;
+    const previous = byName.get(name);
+    if (previous === undefined) {
+      byName.set(name, entry);
+      kept.push(entry);
+      continue;
+    }
+    log(`! duplicate package name ${name}: kept ${previous.catalog.repoUrl}, dropped ${entry.catalog.repoUrl}`);
+  }
+  return kept;
+}
+
 function indexDocument(entries) {
   return {
     format: 1,
@@ -194,13 +225,22 @@ async function main() {
   const entries = raw.repos
     .map(entryOf)
     .filter((entry) => entry !== undefined)
+    .filter((entry) => {
+      if (!spoofsOfficialScope(entry)) return true;
+      process.stdout.write(`! skipped ${entry.catalog.repoUrl}: ${entry.catalog.name} uses the official @deepseek-ai scope\n`);
+      return false;
+    })
     .sort((left, right) => {
       if (left.catalog.verified !== right.catalog.verified) return left.catalog.verified ? -1 : 1;
       return right.catalog.stars - left.catalog.stars;
     });
 
-  const built = entries.map((entry) => entry.indexEntry);
-  const catalog = entries.map((entry) => entry.catalog);
+  const unique = dedupeByName(entries, (message) => process.stdout.write(`${message}\n`));
+  const built = unique.map((entry) => entry.indexEntry);
+  const catalog = unique.map((entry) => entry.catalog);
+
+  const names = new Set(built.map((entry) => entry.name));
+  if (names.size !== built.length) throw new Error('market index contains duplicate package names');
 
   await mkdir(OUT_DIR, { recursive: true });
   const index = indexDocument(built);

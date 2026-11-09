@@ -41,7 +41,9 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 1. 仓库带 `dsh-plugin` 话题；
 2. 通过相关性过滤：声明了 `dsh.bundle`、声明了 `engines.dsh`/`@deepseek-ai/dsh-*` peer，或名称/描述/话题里明确提到 DSH；`deepseek-ai` 官方仓库排除；
 3. 有可安装来源：优先 npm 正式版本（`name@version`），否则回退到固定默认分支 commit 的 git 源；
-4. 能通过市场索引 format 1 校验才会写进 `index.json`。
+4. 包名唯一：format 1 不允许重复的 `name`，冲突时按「verified 优先、star 高优先」保留第一条，其余丢弃并在构建输出里打印两个仓库地址；
+5. 非 `deepseek-ai` 仓库不得声明 `@deepseek-ai/*` 包名，避免在「发现」页伪装成官方包；
+6. 能通过市场索引 format 1 校验才会写进 `index.json`；构建末尾还会再断言一次包名唯一。
 
 `verified` 只表示**仓库声明了 `dsh.bundle.patch`**，不代表安全审计。收录不是背书。
 
