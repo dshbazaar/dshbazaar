@@ -1,0 +1,36 @@
+.gitignore
+  h_407642ed4ce5a5 6-7
+README.md
+  h_407642ed4ce5a5 56,58-67
+packages/dsh-bazaar/README.md
+  h_407642ed4ce5a5 5-6,12-15
+packages/dsh-bazaar/client/client.js
+  h_407642ed4ce5a5 4-8,19-21,25-33,36-37,39-42,45-49,53-61,64-65,67-70,73-76,78,81-83,86-97,100-102,111,115,119-120,122-126,128,130,132,134,137,140,142-149,151,153,161,163-172,175-190,193,198,202,206-209,211-219,221-225,227,229-252,254,256-258,262-299,301-374,382,385
+packages/dsh-bazaar/lib/index.js
+  h_407642ed4ce5a5 4-11,32,34,68-102,104,109-115
+packages/dsh-bazaar/package.json
+  h_407642ed4ce5a5 3,8-13,20-25
+scripts/build-site.mjs
+  h_407642ed4ce5a5 17,38-41,73
+scripts/test-plugin.mjs
+  h_407642ed4ce5a5 69,72-73,94-97,102,106-108,111,113-124
+site/assets/app.js
+  h_407642ed4ce5a5 1,3-19,22,37
+site/assets/style.css
+  h_407642ed4ce5a5 212-246
+site/i18n.mjs
+  h_407642ed4ce5a5 69-75,146-152
+site/layout.mjs
+  h_407642ed4ce5a5 114-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4bf6df68946a98378cba60ed31a343fc92e2c78b",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
