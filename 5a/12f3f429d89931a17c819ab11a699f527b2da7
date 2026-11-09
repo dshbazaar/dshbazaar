@@ -1,0 +1,29 @@
+scripts/test-plugin.mjs
+  s_f2c0209f199ab6::t_50f61642c799e3 1-112
+scripts/lib/net.mjs
+  s_f2c0209f199ab6::t_98eaab580bd5fe 1-59
+packages/dsh-bazaar/cordis.patch.yml
+  s_f2c0209f199ab6::t_0cd9545163ab06 1-4
+packages/dsh-bazaar/package.json
+  s_f2c0209f199ab6::t_489667cc396316 1-25
+package.json
+  s_f2c0209f199ab6::t_b04abca01ebec0 1-20
+packages/dsh-bazaar/client/client.js
+  s_f2c0209f199ab6::t_db5f33e7b200ba 1-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5a12f3f429d89931a17c819ab11a699f527b2da7",
+  "prompts": {},
+  "sessions": {
+    "s_f2c0209f199ab6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1afc3-404b-7401-b674-b2e0a11d1ffc",
+        "model": "deepseek/deepseek-flash"
+      },
+      "human_author": "haotrr <qinhao@qimao.com>"
+    }
+  }
+}
