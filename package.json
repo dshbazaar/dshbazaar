@@ -1,0 +1,20 @@
+{
+  "name": "dsh-bazaar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A community plugin market for DeepSeek Harness: static catalog site + a DSH in-app market plugin.",
+  "scripts": {
+    "catalog": "node scripts/fetch-catalog.mjs",
+    "index": "node scripts/build-index.mjs",
+    "site": "node scripts/build-site.mjs",
+    "build": "node scripts/fetch-catalog.mjs && node scripts/build-index.mjs && node scripts/build-site.mjs",
+    "serve": "node scripts/serve.mjs",
+    "test": "node scripts/test-plugin.mjs",
+    "validate": "node scripts/validate-index.mjs",
+    "dev": "node scripts/build-site.mjs && node scripts/serve.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

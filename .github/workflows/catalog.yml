@@ -1,0 +1,46 @@
+name: catalog
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Scan the dsh-plugin topic
+        run: node scripts/fetch-catalog.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DSH_MARKET_LIMIT: '200'
+          DSH_MARKET_PAGES: '2'
+          DSH_MARKET_SITE_URL: ${{ vars.DSH_MARKET_SITE_URL }}
+      - name: Build the index and the site
+        run: |
+          node scripts/build-index.mjs
+          node scripts/build-site.mjs
+        env:
+          DSH_MARKET_SITE_URL: ${{ vars.DSH_MARKET_SITE_URL }}
+      - name: Check the in-app plugin still loads
+        run: node scripts/test-plugin.mjs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/deploy-pages@v4

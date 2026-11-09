@@ -1,0 +1,4 @@
+# dsh bundle patch: inserts the market tab into a profile's layer stack.
+- insert:
+    - id: dsh-bazaar
+      name: 'dsh-bazaar'
