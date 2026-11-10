@@ -38,7 +38,7 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 
 ## SEO 基线
 
-每页都有 canonical、三向 hreflang、Open Graph 与 Twitter 卡片；结构化数据覆盖 `WebSite`（首页）、`CollectionPage` + `ItemList`（列表）、`SoftwareApplication` + `BreadcrumbList`（插件页）、`TechArticle`（教程）。`assets/og.png` 是分享图，`site/assets/` 下维护。
+每页都有 canonical、三向 hreflang、Open Graph 与 Twitter 卡片；结构化数据覆盖 `WebSite`（首页）、`CollectionPage` + `ItemList`（列表）、`SoftwareApplication` + `BreadcrumbList`（插件页）、`TechArticle`（教程）。`assets/og.png` 是分享图（暖白底，与默认亮色主题一致，暗色版留在 `site/assets/og-dark.png` 备用），在 `site/assets/` 下维护。
 
 列表按 48 条分页；插件详情页会抓取仓库 README 的纯文本（最多 4000 字符）作为正文，避免薄内容。
 
