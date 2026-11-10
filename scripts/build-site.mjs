@@ -208,8 +208,7 @@ ${listCards(plugins, lang)}
   <div class="empty" data-empty hidden>${escapeHtml(s.empty)}</div>
   ${pagination({ lang, basePath, page: pageNumber, total: totalPages, s })}
   <p class="note" style="margin-top:26px">${escapeHtml(s.verifiedNote)}</p>
-</div>
-<script src="/assets/app.js" defer></script>`;
+</div>`;
 }
 
 function listPage(catalog, lang, { category = null, pageNumber = 1 } = {}) {
@@ -726,8 +725,7 @@ function searchPage(catalog, lang) {
   </form>
   <div class="grid" data-search-results></div>
   <div class="empty" data-search-empty hidden>${escapeHtml(s.searchEmpty)}</div>
-</div>
-<script src="/assets/app.js" defer></script>`;
+</div>`;
   return page({
     lang,
     site: SITE_URL,

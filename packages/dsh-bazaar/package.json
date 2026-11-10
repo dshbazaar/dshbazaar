@@ -1,6 +1,6 @@
 {
   "name": "dsh-bazaar",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Community plugin market for DeepSeek Harness: browse and install catalogued plugins from the Plugins page. · DeepSeek Harness 社区插件市场：在插件页浏览并安装目录里的插件。",
   "type": "module",
   "main": "lib/index.js",

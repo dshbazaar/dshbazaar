@@ -78,15 +78,20 @@ window.__ModuleLoader__.load({
       results: 'results',
     };
 
-    const BORDER = '1px solid var(--dsw-alias-border-l2, #262b30)';
-    const SURFACE = 'var(--dsw-alias-bg-layer-2, #171a1d)';
+    // Host CSS variables flip between light and dark themes, and their "brand" colour is
+    // near-black in light mode — filling a button with it produced invisible text. Use
+    // theme-neutral greys for structure and one fixed accent for actions.
+    const BORDER = '1px solid rgba(128, 128, 128, 0.35)';
+    const SURFACE = 'rgba(128, 128, 128, 0.07)';
+    const ACCENT = '#d9a34a';
+    const ACCENT_INK = '#1a1206';
 
     const styles = {
       root: { display: 'flex', flexDirection: 'column', gap: '14px', padding: '4px 0 28px' },
       tabbar: { display: 'flex', alignItems: 'center', gap: '4px', borderBottom: BORDER, paddingBottom: '2px' },
       tab: (active) => ({
         border: 'none',
-        borderBottom: active ? '2px solid var(--dsw-alias-brand-primary, #d9a34a)' : '2px solid transparent',
+        borderBottom: active ? `2px solid ${ACCENT}` : '2px solid transparent',
         background: 'transparent',
         color: 'inherit',
         padding: '7px 12px',
@@ -109,8 +114,8 @@ window.__ModuleLoader__.load({
       },
       chip: (active) => ({
         border: BORDER,
-        background: active ? 'var(--dsw-alias-brand-primary, #d9a34a)' : 'transparent',
-        color: active ? '#17130a' : 'inherit',
+        background: active ? ACCENT : 'transparent',
+        color: active ? ACCENT_INK : 'inherit',
         borderRadius: '999px',
         padding: '3px 10px',
         fontSize: '12px',
@@ -143,8 +148,8 @@ window.__ModuleLoader__.load({
       actions: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' },
       button: (primary) => ({
         border: primary ? 'none' : BORDER,
-        background: primary ? 'var(--dsw-alias-brand-primary, #d9a34a)' : 'transparent',
-        color: primary ? '#17130a' : 'inherit',
+        background: primary ? ACCENT : 'transparent',
+        color: primary ? ACCENT_INK : 'inherit',
         borderRadius: '7px',
         padding: '5px 12px',
         fontSize: '12.5px',
@@ -156,8 +161,8 @@ window.__ModuleLoader__.load({
         padding: '1px 7px',
         borderRadius: '999px',
         border: '1px solid',
-        borderColor: ok ? 'rgba(111,191,139,.45)' : 'var(--dsw-alias-border-l2, #262b30)',
-        color: ok ? '#6fbf8b' : 'inherit',
+        borderColor: ok ? 'rgba(47,125,79,.45)' : 'rgba(128,128,128,.35)',
+        color: ok ? '#3f9e6a' : 'inherit',
         opacity: ok ? 1 : 0.65,
       }),
       notice: { padding: '22px 4px', fontSize: '13px', opacity: 0.75, display: 'flex', gap: '10px', alignItems: 'center' },

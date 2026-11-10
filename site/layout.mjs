@@ -46,6 +46,7 @@ function header({ lang, site, active }) {
   <a class="brand" href="/${lang}/"><span class="dot"></span>${escapeHtml(s.brand)}<span class="sub">${escapeHtml(s.tagline)}</span></a>
   <nav class="main">
     ${nav.map(([key, href]) => `<a href="${href}"${active === key ? ' style="color:var(--text)"' : ''}>${escapeHtml(s.nav[key])}</a>`).join('\n    ')}
+    <button class="theme-toggle" type="button" data-theme-toggle data-dark-label="${escapeHtml(s.themeToDark)}" data-light-label="${escapeHtml(s.themeToLight)}">${escapeHtml(s.themeToDark)}</button>
     <a class="lang" href="/${s.otherLang}/">${escapeHtml(s.langLabel === '中文' ? 'EN' : '中文')}</a>
   </nav>
 </div></header>`;
@@ -69,6 +70,8 @@ export function page({ lang, site, title, description, body, active, generatedAt
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(fullTitle)}</title>
 <meta name="description" content="${escapeHtml(description ?? s.heroBody)}">
+<meta name="theme-color" content="#f5f3ee">
+<script>try{var q=new URLSearchParams(location.search).get('theme');var s=q||localStorage.getItem('dshbazaar-theme');if(s==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 ${headExtra}
@@ -79,6 +82,7 @@ ${header({ lang, site, active })}
 ${body}
 </main>
 ${footer({ lang, site, generatedAt })}
+<script src="/assets/app.js" defer></script>
 </body>
 </html>
 `;

@@ -1,5 +1,21 @@
 /** Copy-to-clipboard buttons, plus client-side filtering and sorting for the catalog grid. */
 (() => {
+  const themeToggle = document.querySelector('[data-theme-toggle]');
+  if (themeToggle !== null) {
+    const sync = () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      themeToggle.textContent = dark ? themeToggle.dataset.lightLabel : themeToggle.dataset.darkLabel;
+    };
+    sync();
+    themeToggle.addEventListener('click', () => {
+      const dark = document.documentElement.dataset.theme !== 'dark';
+      if (dark) document.documentElement.dataset.theme = 'dark';
+      else delete document.documentElement.dataset.theme;
+      try { localStorage.setItem('dshbazaar-theme', dark ? 'dark' : 'light'); } catch {}
+      sync();
+    });
+  }
+
   for (const button of document.querySelectorAll('[data-copy]')) {
     button.addEventListener('click', async () => {
       try {
