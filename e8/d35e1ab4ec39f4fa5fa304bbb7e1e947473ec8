@@ -1,0 +1,20 @@
+.github/workflows/catalog.yml
+  h_407642ed4ce5a5 36-45
+.indexnow-urls.json
+  h_407642ed4ce5a5 1
+package.json
+  h_407642ed4ce5a5 15
+scripts/indexnow.mjs
+  h_407642ed4ce5a5 1-100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e8d35e1ab4ec39f4fa5fa304bbb7e1e947473ec8",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
