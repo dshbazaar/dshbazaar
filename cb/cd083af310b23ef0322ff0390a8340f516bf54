@@ -1,0 +1,19 @@
+scripts/fetch-catalog.mjs
+  s_17f492ee4d89ca::t_4463721d868378 23-38,48-49,204-220,223
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cbcd083af310b23ef0322ff0390a8340f516bf54",
+  "prompts": {},
+  "sessions": {
+    "s_17f492ee4d89ca": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c41b-b6ba-7353-90b3-2bf5915612b3",
+        "model": "qiseek/deepseek-v4-flash"
+      },
+      "human_author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
