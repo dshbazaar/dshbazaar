@@ -9,7 +9,7 @@
  * State: `INDEXNOW_STATE` (default `.indexnow-urls.json`). A committed seed file
  * `.indexnow-urls.json` is used when the cache copy is missing.
  *
- * Flags: --all (ignore state), --dry-run (report only), --cap <n> (default 200).
+ * Flags: --all (ignore state), --dry-run (report only), --cap <n> (default 1000).
  */
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -26,7 +26,7 @@ const args = process.argv.slice(2);
 const forceAll = args.includes('--all');
 const dryRun = args.includes('--dry-run');
 const capIndex = args.indexOf('--cap');
-const CAP = capIndex === -1 ? 200 : Number(args[capIndex + 1]) || 200;
+const CAP = capIndex === -1 ? 1000 : Number(args[capIndex + 1]) || 1000;
 
 const log = (message) => process.stdout.write(`${message}\n`);
 
