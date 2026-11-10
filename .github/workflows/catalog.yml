@@ -22,8 +22,7 @@ jobs:
         run: node scripts/fetch-catalog.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DSH_MARKET_LIMIT: '1000'
-          DSH_MARKET_PAGES: '10'
+          DSH_MARKET_LIMIT: '2000'
           DSH_MARKET_SITE_URL: ${{ vars.DSH_MARKET_SITE_URL }}
       - name: Build the index and the site
         run: |

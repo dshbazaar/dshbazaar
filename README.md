@@ -6,7 +6,7 @@
 
 | 层 | 目录 | 作用 |
 |---|---|---|
-| 数据 | `scripts/fetch-catalog.mjs` → `data/repos.json` | 扫 GitHub `dsh-plugin` 话题，读每个仓库的 `package.json`、npm 发布状态、默认分支 commit |
+| 数据 | `scripts/fetch-catalog.mjs` → `data/repos.json` | 按创建时间窗口分多次搜 GitHub `dsh-plugin` 话题（单查询上限 1000），读 `package.json`、README、npm 发布状态与默认分支 commit |
 | 索引 + 站点 | `scripts/build-index.mjs`、`scripts/build-site.mjs` → `public/` | 生成市场索引（format 1）与中英双语静态站点（SEO 头、结构化数据、分页、教程、三份 sitemap） |
 | 应用内市场 | `packages/dsh-bazaar/` | 一个 DSH 插件，把同一份目录渲染进「设置 → 插件市场」的 `plugins.tab` |
 
@@ -26,8 +26,7 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `GITHUB_TOKEN` | 空 | 提高 GitHub API 限额；不会被打印或写进产物 |
-| `DSH_MARKET_LIMIT` | `100` | 收录仓库数上限（≤ 1000，GitHub 搜索 API 的上限） |
-| `DSH_MARKET_PAGES` | `1` | 搜索分页数（每页 100，≤ 10） |
+| `DSH_MARKET_LIMIT` | `100` | 收录仓库数上限（≤ 3000） |
 | `DSH_MARKET_SITE_URL` | `https://dshbazaar.io` | 站点绝对地址，用于 sitemap 与索引里的 icon 解析 |
 
 ## 产物

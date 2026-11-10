@@ -20,8 +20,22 @@ const run = promisify(execFile);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'data/repos.json');
 
-const LIMIT = Math.min(Number(process.env.DSH_MARKET_LIMIT ?? 100) || 100, 1000);
-const PAGES = Math.min(Number(process.env.DSH_MARKET_PAGES ?? 1) || 1, 10);
+const LIMIT = Math.min(Number(process.env.DSH_MARKET_LIMIT ?? 100) || 100, 3000);
+
+/**
+ * The search API caps every query at 1000 results, while the topic holds tens of
+ * thousands of repositories. Walking several creation windows (each sorted by stars)
+ * reaches a far wider slice than one paginated query can.
+ */
+const SEARCH_PLAN = [
+  { query: 'topic:dsh-plugin', pages: 3 },
+  { query: 'topic:dsh-plugin created:2026-07-01..2026-07-31', pages: 2 },
+  { query: 'topic:dsh-plugin created:2026-08-01..2026-08-31', pages: 3 },
+  { query: 'topic:dsh-plugin created:2026-09-01..2026-09-30', pages: 2 },
+  { query: 'topic:dsh-plugin created:2026-10-01..2026-10-31', pages: 3 },
+  { query: 'topic:dsh-plugin created:2026-11-01..2026-11-30', pages: 2 },
+  { query: 'topic:dsh-plugin pushed:>2026-10-15', pages: 2 },
+];
 const TOKEN = process.env.GITHUB_TOKEN?.trim();
 const TOPIC = 'dsh-plugin';
 
@@ -31,8 +45,8 @@ function log(message) {
   process.stdout.write(`${message}\n`);
 }
 
-async function searchPage(page) {
-  const url = `https://api.github.com/search/repositories?q=topic:${TOPIC}&sort=stars&order=desc&per_page=100&page=${page}`;
+async function searchPage(query, page) {
+  const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=100&page=${page}`;
   const { ok, data, status } = await fetchJson(url, { headers });
   if (!ok) {
     log(`! search page ${page} failed (status ${status})`);
@@ -187,21 +201,26 @@ async function enrich(item) {
 async function main() {
   log(`DSH Market Hub · catalog scan (topic:${TOPIC}, limit ${LIMIT})`);
   const items = [];
-  for (let page = 1; page <= PAGES; page += 1) {
-    const found = await searchPage(page);
-    log(`  search page ${page}: ${found.length} repositories`);
-    items.push(...found);
-    if (found.length < 100) break;
-    await sleep(1200); // unauthenticated search allows 10 requests a minute
+  const seen = new Set();
+  for (const step of SEARCH_PLAN) {
+    for (let page = 1; page <= step.pages; page += 1) {
+      const found = await searchPage(step.query, page);
+      if (found.length === 0) break;
+      let fresh = 0;
+      for (const item of found) {
+        if (seen.has(item.full_name)) continue;
+        seen.add(item.full_name);
+        items.push(item);
+        fresh += 1;
+      }
+      log(`  ${step.query} p${page}: ${found.length} results, ${fresh} new`);
+      if (items.length >= LIMIT || found.length < 100) break;
+      await sleep(1200); // unauthenticated search allows 10 requests a minute
+    }
+    if (items.length >= LIMIT) break;
   }
 
-  const seen = new Set();
-  const unique = items.filter((item) => {
-    if (seen.has(item.full_name)) return false;
-    seen.add(item.full_name);
-    return true;
-  });
-  const selected = unique.slice(0, LIMIT);
+  const selected = items.slice(0, LIMIT);
 
   const records = await mapPool(selected, 6, async (item, index) => {
     const record = await enrich(item);
