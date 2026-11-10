@@ -84,7 +84,8 @@ function buildTags(plugins) {
 function renderMarkdown(markdown) {
   const inline = (text) => escapeHtml(text)
     .replace(/`([^`]+)`/gu, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/gu, '<strong>$1</strong>');
+    .replace(/\*\*([^*]+)\*\*/gu, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*]+)\*(?!\*)/gu, '$1<em>$2</em>');
 
   const out = [];
   let list = null;
@@ -278,9 +279,11 @@ function detailPage(catalog, plugin, lang, tagSlugs = new Set()) {
     ? `\n# registry: ${plugin.registry}`
     : '';
 
-  const similar = sortedByStars(catalog.plugins
-    .filter((candidate) => candidate.category === plugin.category && candidate.name !== plugin.name))
-    .slice(0, 3);
+  const comparePool = [...catalog.plugins.filter((candidate) => candidate.category === plugin.category)]
+    .sort((left, right) => right.stars - left.stars);
+  const compareRows = (comparePool.some((candidate) => candidate.name === plugin.name)
+    ? comparePool
+    : [plugin, ...comparePool]).slice(0, 5);
 
   const readmeHtml = typeof plugin.readme === 'string' && plugin.readme.trim() !== ''
     ? renderMarkdown(plugin.readme)
@@ -339,8 +342,30 @@ function detailPage(catalog, plugin, lang, tagSlugs = new Set()) {
 
     ${readmeHtml === '' ? '' : `<h2>${escapeHtml(s.detailAbout)}</h2><div class="prose readme">${readmeHtml}</div>`}
 
-    ${similar.length === 0 ? '' : `<h2>${escapeHtml(s.similar)}</h2>
-    <div class="grid">${similar.map((entry) => card(entry, lang, summarize(entry.description, lang))).join('\n')}</div>`}
+    <h2>${escapeHtml(s.compareTitle)}</h2>
+    <p style="color:var(--muted);margin:0 0 12px">${escapeHtml(s.compareHint)}</p>
+    <div class="compare">
+      <table>
+        <thead><tr>
+          <th>${escapeHtml(s.comparePlugin)}</th><th>${escapeHtml(s.compareAuthor)}</th>
+          <th>${escapeHtml(s.compareStars)}</th><th>${escapeHtml(s.compareVersion)}</th><th>${escapeHtml(s.compareUpdated)}</th>
+        </tr></thead>
+        <tbody>
+${compareRows.map((entry) => {
+  const current = entry.name === plugin.name;
+  return `          <tr${current ? ' class="current"' : ''}>
+            <td>${current
+              ? `${escapeHtml(localized(entry.title, lang))} <span class="badge">${escapeHtml(s.currentRow)}</span>`
+              : `<a href="/${lang}/p/${repoSlug(entry)}/">${escapeHtml(localized(entry.title, lang))}</a>`}</td>
+            <td>${escapeHtml(entry.author ?? '—')}</td>
+            <td>${escapeHtml(fmtNumber(entry.stars))}</td>
+            <td>${escapeHtml(entry.version ?? '—')}</td>
+            <td>${escapeHtml(fmtDate(entry.updatedAt))}</td>
+          </tr>`;
+}).join('\n')}
+        </tbody>
+      </table>
+    </div>
   </div>
   <aside>
     <h2 style="margin-top:0">${escapeHtml(s.detailMeta)}</h2>
@@ -384,6 +409,10 @@ function homePage(catalog, lang) {
   const { totals, plugins } = catalog;
   const strong = sortedByStars(plugins.filter((plugin) => plugin.verified || plugin.dshTarget !== undefined));
   const picks = [...strong, ...sortedByStars(plugins.filter((plugin) => !strong.includes(plugin)))].slice(0, 6);
+  const recent = [...plugins]
+    .filter((plugin) => Number.isFinite(Date.parse(plugin.updatedAt ?? '')))
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
+    .slice(0, 8);
   const body = `
 <section class="hero"><div class="wrap">
   <h1>${escapeHtml(s.heroTitle)}</h1>
@@ -412,6 +441,13 @@ ${categoryCards(plugins, lang)}
   <div class="grid">
 ${picks.map((plugin) => card(plugin, lang, summarize(plugin.description, lang))).join('\n')}
   </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="section-head"><div><h2>${escapeHtml(s.recentTitle)}</h2><p>${escapeHtml(s.recentBody)}</p></div></div>
+  <ul class="recent">
+${recent.map((plugin) => `    <li><a href="/${lang}/p/${repoSlug(plugin)}/">${escapeHtml(localized(plugin.title, lang))}</a><span class="meta">${escapeHtml(localized(categoryById(plugin.category).title, lang))} · ${escapeHtml(plugin.author ?? '')} · ${escapeHtml(fmtDate(plugin.updatedAt))}</span></li>`).join('\n')}
+  </ul>
 </div></section>
 
 <section class="block"><div class="wrap">
@@ -859,6 +895,19 @@ async function main() {
       await write(`${lang}/p/${repoSlug(plugin)}/index.html`, detailPage(catalog, plugin, lang, tagSlugs));
       pages.push(`${lang}/p/${repoSlug(plugin)}/`);
     }
+  }
+
+  for (const lang of LANGS) {
+    const rows = catalog.plugins.map((plugin) => ({
+      n: plugin.name,
+      t: localized(plugin.title, lang),
+      d: summarize(plugin.description, lang, 110),
+      s: plugin.stars,
+      r: repoSlug(plugin),
+      c: plugin.category,
+      v: plugin.verified,
+    }));
+    await write(`api/search.${lang}.json`, `${JSON.stringify(rows)}\n`);
   }
 
   await write('index.html', `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/zh/"><link rel="canonical" href="${SITE_URL}/zh/"><title>DSH 插件市场</title></head><body><a href="/zh/">DSH 插件市场</a></body></html>

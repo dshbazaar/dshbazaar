@@ -244,3 +244,17 @@ footer.site a:hover { color: var(--accent); }
 @media (max-width: 860px) {
   .install-card { gap: 20px; padding: 20px; }
 }
+
+/* Same-category comparison table */
+.compare { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+.compare table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.compare th, .compare td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.compare thead th { color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: 0.03em; }
+.compare tbody tr:last-child td { border-bottom: 0; }
+.compare tr.current { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.compare td .badge { margin-left: 6px; font-size: 10.5px; }
+
+/* Recently updated list on the home page */
+.recent { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2px 28px; }
+.recent li { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.recent .meta { color: var(--muted); font: 400 11.5px var(--mono); white-space: nowrap; }

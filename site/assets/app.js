@@ -17,9 +17,10 @@
     });
   }
 
-  // Search page: filter the whole catalog client-side.
+  // Search page: filter the whole catalog client-side against a slim per-language index.
   const searchPage = document.querySelector('[data-search-page]');
   if (searchPage !== null) {
+    const lang = document.documentElement.lang.startsWith('en') ? 'en' : 'zh';
     const input = searchPage.querySelector('[data-search-input]');
     const results = searchPage.querySelector('[data-search-results]');
     const empty = searchPage.querySelector('[data-search-empty]');
@@ -27,30 +28,24 @@
     const initial = params.get('q') ?? '';
     if (input !== null) input.value = initial;
 
+    const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
     const render = async (query) => {
       const text = query.trim().toLowerCase();
       if (text === '') { results.innerHTML = ''; empty.hidden = true; return; }
-      const response = await fetch('/api/catalog.json');
-      const data = await response.json();
-      const hits = (data.plugins ?? []).filter((plugin) => {
-        const title = typeof plugin.title === 'string' ? plugin.title : (plugin.title?.zh ?? plugin.title?.en ?? '');
-        const desc = typeof plugin.description === 'string' ? plugin.description : (plugin.description?.zh ?? plugin.description?.en ?? '');
-        return [title, desc, plugin.name, ...(plugin.topics ?? [])].join(' ').toLowerCase().includes(text);
-      }).slice(0, 60);
-      results.innerHTML = hits.map((plugin) => {
-        const slug = (plugin.repoUrl ?? '').replace('https://github.com/', '');
-        const title = typeof plugin.title === 'string' ? plugin.title : (plugin.title?.zh ?? plugin.title?.en ?? plugin.name);
-        const desc = typeof plugin.description === 'string' ? plugin.description : (plugin.description?.zh ?? plugin.description?.en ?? '');
-        return `<a class="card" href="/${document.documentElement.lang === 'en' ? 'en' : 'zh'}/p/${slug}/">
-  <div class="top"><h3>${title.replace(/[<&>]/g, '')}</h3></div>
-  <p class="desc">${String(desc).slice(0, 140).replace(/[<&>]/g, '')}</p>
-  <div class="foot"><span>★ ${plugin.stars ?? 0}</span></div>
-</a>`;
-      }).join('');
+      const response = await fetch(`/api/search.${lang}.json`);
+      const rows = await response.json();
+      const hits = rows.filter((row) => [row.t, row.d, row.n, row.c].join(' ').toLowerCase().includes(text)).slice(0, 60);
+      results.innerHTML = hits.map((row) => `<a class="card" href="/${lang}/p/${escape(row.r)}/">
+  <div class="top"><h3>${escape(row.t)}</h3></div>
+  <p class="desc">${escape(row.d)}</p>
+  <div class="foot"><span class="cat-tag">${escape(row.c)}</span>${row.v ? '<span class="badge ok">✓</span>' : ''}<span>★ ${Number(row.s) || 0}</span></div>
+</a>`).join('');
       empty.hidden = hits.length !== 0;
     };
 
     if (initial !== '') render(initial);
+    input?.addEventListener('input', (event) => render(event.target.value));
   }
 
   const grid = document.querySelector('[data-grid]');
