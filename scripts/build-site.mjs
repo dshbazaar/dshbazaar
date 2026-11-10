@@ -662,7 +662,7 @@ async function main() {
   await copyFile(resolve(ROOT, 'site/assets/og.png'), resolve(OUT, 'assets/og.png'));
   // Search-engine ownership files must stay at the root and must never be removed.
   for (const name of await readdir(resolve(ROOT, 'site'))) {
-    if (/^google[0-9a-f]+\.html$/u.test(name)) {
+    if (/^google[0-9a-f]+\.html$/u.test(name) || /^[0-9a-f]{32}\.txt$/u.test(name)) {
       await copyFile(resolve(ROOT, 'site', name), resolve(OUT, name));
     }
   }
