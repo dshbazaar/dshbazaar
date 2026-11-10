@@ -1,0 +1,16 @@
+scripts/build-site.mjs
+  h_407642ed4ce5a5 665
+site/49efe927073ed458ec4e37b92935a307.txt
+  h_407642ed4ce5a5 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9d1cd7d9ae469884823b43a3b4cd11844d166c82",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
