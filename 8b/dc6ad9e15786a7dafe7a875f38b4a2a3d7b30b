@@ -1,0 +1,26 @@
+packages/dsh-bazaar/client/client.js
+  h_407642ed4ce5a5 81-87,94,117-118,151-152,164-165
+packages/dsh-bazaar/package.json
+  h_407642ed4ce5a5 3
+scripts/build-site.mjs
+  h_407642ed4ce5a5 211,728
+site/assets/app.js
+  h_407642ed4ce5a5 3-18
+site/assets/style.css
+  h_407642ed4ce5a5 2-19,27,34-35,100,184,205,277-290
+site/i18n.mjs
+  h_407642ed4ce5a5 11-12,132-133
+site/layout.mjs
+  h_407642ed4ce5a5 49,73-74,85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8bdc6ad9e15786a7dafe7a875f38b4a2a3d7b30b",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
