@@ -7,7 +7,7 @@
  * paginated lists, plugin detail pages that carry the repository README, hand-written
  * guides, and three sitemaps with hreflang alternates and lastmod.
  */
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CATEGORIES, categoryById } from '../config/categories.mjs';
@@ -660,6 +660,12 @@ async function main() {
   await copyFile(resolve(ROOT, 'site/assets/style.css'), resolve(OUT, 'assets/style.css'));
   await copyFile(resolve(ROOT, 'site/assets/app.js'), resolve(OUT, 'assets/app.js'));
   await copyFile(resolve(ROOT, 'site/assets/og.png'), resolve(OUT, 'assets/og.png'));
+  // Search-engine ownership files must stay at the root and must never be removed.
+  for (const name of await readdir(resolve(ROOT, 'site'))) {
+    if (/^google[0-9a-f]+\.html$/u.test(name)) {
+      await copyFile(resolve(ROOT, 'site', name), resolve(OUT, name));
+    }
+  }
   await write('assets/favicon.svg', FAVICON);
 
   const pages = [];
