@@ -1,0 +1,14 @@
+README.md
+  h_407642ed4ce5a5 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2f488e5c6163233acfbcf8f7d051c34e12b2012b",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
