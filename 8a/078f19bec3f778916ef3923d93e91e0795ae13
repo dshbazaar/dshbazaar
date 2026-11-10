@@ -1,0 +1,20 @@
+README.md
+  h_407642ed4ce5a5 37-38
+scripts/build-site.mjs
+  h_407642ed4ce5a5 58-139,267,285-292,294,325,619-679,807-808,853-857,859,889-890,897,907
+scripts/fetch-catalog.mjs
+  h_407642ed4ce5a5 63,68-80
+site/i18n.mjs
+  h_407642ed4ce5a5 69-71,177-179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8a078f19bec3f778916ef3923d93e91e0795ae13",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
