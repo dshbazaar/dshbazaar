@@ -277,7 +277,6 @@ ${meta.map(([key, value]) => `      <div><span class="k">${escapeHtml(key)}</spa
       description,
       siteUrl: SITE_URL,
       type: 'article',
-      image: plugin.iconUrl,
       jsonLd: [
         softwareJsonLd(plugin, lang, SITE_URL, title, description),
         breadcrumbJsonLd([
@@ -711,6 +710,11 @@ async function main() {
 
   // Three sitemaps plus an index, each URL carrying lastmod and hreflang alternates.
   const pluginRoutes = catalog.plugins.map((plugin) => `p/${repoSlug(plugin)}/`);
+  const pluginLastmod = new Map(catalog.plugins.map((plugin) => [
+    `p/${repoSlug(plugin)}/`,
+    (plugin.updatedAt ?? catalog.generatedAt).slice(0, 10),
+  ]));
+  const lastmodFor = (route) => pluginLastmod.get(route) ?? lastmod;
   const categoryRoutes = CATEGORIES.flatMap((category) => {
     const count = catalog.plugins.filter((plugin) => plugin.category === category.id).length;
     return Array.from({ length: pageCount(count) }, (unused, index) => listRoute(`c/${category.id}/`, index + 1));
@@ -724,7 +728,7 @@ async function main() {
   await write('sitemaps/categories.xml', sitemapFile([...categoryRoutes, ...listRoutes].flatMap((route) =>
     LANGS.map((lang) => sitemapEntry(absolute(lang, route), lastmod, route)))));
   await write('sitemaps/plugins.xml', sitemapFile(pluginRoutes.flatMap((route) =>
-    LANGS.map((lang) => sitemapEntry(absolute(lang, route), lastmod, route)))));
+    LANGS.map((lang) => sitemapEntry(absolute(lang, route), lastmodFor(route), route)))));
 
   await write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
