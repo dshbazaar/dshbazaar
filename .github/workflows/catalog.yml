@@ -33,6 +33,16 @@ jobs:
           DSH_MARKET_SITE_URL: ${{ vars.DSH_MARKET_SITE_URL }}
       - name: Check the in-app plugin still loads
         run: node scripts/test-plugin.mjs
+      - name: Restore IndexNow state
+        uses: actions/cache@v4
+        with:
+          path: .indexnow-urls.json
+          key: indexnow-${{ github.run_id }}
+          restore-keys: indexnow-
+      - name: Submit new URLs to IndexNow
+        run: node scripts/indexnow.mjs
+        env:
+          INDEXNOW_KEY: 49efe927073ed458ec4e37b92935a307
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public

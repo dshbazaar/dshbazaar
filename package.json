@@ -12,6 +12,7 @@
     "serve": "node scripts/serve.mjs",
     "test": "node scripts/test-plugin.mjs",
     "validate": "node scripts/validate-index.mjs",
+    "indexnow": "node scripts/indexnow.mjs",
     "dev": "node scripts/build-site.mjs && node scripts/serve.mjs"
   },
   "engines": {
