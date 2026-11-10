@@ -34,8 +34,8 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 
 - `public/api/index.json` — **市场索引 format 1**，DSH 自带 `dsh-plugin-market` 直接读这个格式。已用 DSH 内置的 `parseMarketIndex` 校验通过。
 - `public/api/catalog.json` — 站点与应用内插件渲染的扁平目录（含 `installSpec`、star、更新时间等）。
-- `public/{zh,en}/…` — 首页、分页列表、11 个分类页、每个插件的详情页（含仓库 README 正文）、教程、提交与关于页。
-- `public/sitemap.xml` 是索引，指向 `sitemaps/pages.xml`、`categories.xml`、`plugins.xml`；每个 URL 带 `lastmod` 与 `zh-CN / en / x-default` 三条 alternate。
+- `public/{zh,en}/…` — 首页、分页列表、11 个分类页、每个插件的详情页（含渲染后的仓库 README）、话题标签页（`/t/…`）、教程、提交与关于页。
+- `public/sitemap.xml` 是索引，指向 `sitemaps/pages.xml`、`categories.xml`、`plugins.xml`、`tags.xml`；每个 URL 带 `lastmod`（插件页按仓库最近推送时间）与 `zh-CN / en / x-default` 三条 alternate。
 
 ## SEO 基线
 

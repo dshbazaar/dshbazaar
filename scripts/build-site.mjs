@@ -55,6 +55,88 @@ const write = async (path, contents) => {
 
 const sortedByStars = (plugins) => [...plugins].sort((left, right) => right.stars - left.stars);
 const pageCount = (total) => Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+/** A URL-safe topic slug. */
+const tagSlug = (topic) => String(topic).toLowerCase().replace(/[^a-z0-9]+/gu, '-').replace(/^-+|-+$/gu, '');
+
+/** Topics broad enough that a page for them would say nothing. */
+const GENERIC_TAGS = new Set(['dsh', 'dsh-plugin', 'plugin', 'plugins', 'deepseek', 'harness']);
+
+/** Topics with enough members to deserve their own page. */
+function buildTags(plugins) {
+  const map = new Map();
+  for (const plugin of plugins) {
+    for (const topic of plugin.topics ?? []) {
+      const slug = tagSlug(topic);
+      if (slug.length < 2 || slug.length > 40 || GENERIC_TAGS.has(slug)) continue;
+      const entry = map.get(slug) ?? { slug, label: String(topic), plugins: [] };
+      entry.plugins.push(plugin);
+      map.set(slug, entry);
+    }
+  }
+  return [...map.values()]
+    .filter((entry) => entry.plugins.length >= 3)
+    .sort((left, right) => right.plugins.length - left.plugins.length)
+    .slice(0, 150);
+}
+
+/** Render the stored repository Markdown: headings, lists, code fences, paragraphs. */
+function renderMarkdown(markdown) {
+  const inline = (text) => escapeHtml(text)
+    .replace(/`([^`]+)`/gu, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/gu, '<strong>$1</strong>');
+
+  const out = [];
+  let list = null;
+  let inCode = false;
+  const flush = () => {
+    if (list !== null) {
+      out.push(`<ul>${list.join('')}</ul>`);
+      list = null;
+    }
+  };
+
+  for (const raw of markdown.split('\n')) {
+    const line = raw.trimEnd();
+    if (/^\s*```/u.test(line)) {
+      if (inCode) {
+        out.push('</pre>');
+        inCode = false;
+      } else {
+        flush();
+        out.push('<pre class="code">');
+        inCode = true;
+      }
+      continue;
+    }
+    if (inCode) {
+      out.push(escapeHtml(raw));
+      continue;
+    }
+    const heading = /^(#{1,4})\s+(.*)$/u.exec(line);
+    if (heading !== null) {
+      flush();
+      const level = Math.min(heading[1].length + 1, 4);
+      out.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      continue;
+    }
+    const item = /^\s*[-*+]\s+(.*)$/u.exec(line);
+    if (item !== null) {
+      list ??= [];
+      list.push(`<li>${inline(item[1])}</li>`);
+      continue;
+    }
+    if (line.trim() === '') {
+      flush();
+      continue;
+    }
+    flush();
+    out.push(`<p>${inline(line)}</p>`);
+  }
+  if (inCode) out.push('</pre>');
+  flush();
+  return out.slice(0, 60).join('\n');
+}
 const listRoute = (base, n) => (n === 1 ? base : `${base}${n}/`);
 const absolute = (lang, route) => `${SITE_URL}/${lang}/${route}`;
 
@@ -182,7 +264,7 @@ function listPage(catalog, lang, { category = null, pageNumber = 1 } = {}) {
   });
 }
 
-function detailPage(catalog, plugin, lang) {
+function detailPage(catalog, plugin, lang, tagSlugs = new Set()) {
   const s = t(lang);
   const category = categoryById(plugin.category);
   const title = localized(plugin.title, lang);
@@ -200,10 +282,16 @@ function detailPage(catalog, plugin, lang) {
     .filter((candidate) => candidate.category === plugin.category && candidate.name !== plugin.name))
     .slice(0, 3);
 
-  const readme = typeof plugin.readme === 'string' ? plugin.readme.trim() : '';
-  const readmeHtml = readme === ''
+  const readmeHtml = typeof plugin.readme === 'string' && plugin.readme.trim() !== ''
+    ? renderMarkdown(plugin.readme)
+    : '';
+
+  const tags = (plugin.topics ?? [])
+    .map((topic) => ({ slug: tagSlug(topic), label: String(topic) }))
+    .filter((tag) => tagSlugs.has(tag.slug));
+  const tagLinks = tags.length === 0
     ? ''
-    : readme.split(/\n{2,}/u).slice(0, 14).map((paragraph) => `<p>${escapeHtml(paragraph.replace(/\n/gu, ' ')).slice(0, 1200)}</p>`).join('\n');
+    : `<div class="chips" style="margin-top:14px">${tags.map((tag) => `<a class="chip" href="/${lang}/t/${tag.slug}/">#${escapeHtml(tag.label)}</a>`).join('')}</div>`;
 
   const meta = [
     [s.fieldRepo, plugin.repoUrl ? `<a href="${escapeHtml(plugin.repoUrl)}">${escapeHtml(repoSlug(plugin))}</a>` : '—'],
@@ -234,6 +322,7 @@ function detailPage(catalog, plugin, lang) {
       ${plugin.archived ? '<span class="badge">archived</span>' : ''}
     </div>
     <p class="lede">${escapeHtml(localized(plugin.description, lang))}</p>
+    ${tagLinks}
 
     <h2>${escapeHtml(s.detailPositioning)}</h2>
     <p>${escapeHtml(summarize(plugin.description, lang, 260))}</p>
@@ -527,6 +616,67 @@ function picksPage(catalog, lang) {
   });
 }
 
+function tagPage(catalog, tag, lang) {
+  const s = t(lang);
+  const plugins = sortedByStars(tag.plugins);
+  const title = format(s.tagTitle, { tag: tag.label });
+  const description = format(s.tagBody, { n: plugins.length });
+  const route = `t/${tag.slug}/`;
+  const body = `
+<div class="wrap" style="padding:44px 0 60px">
+  ${breadcrumbs([
+    { name: lang === 'zh' ? '首页' : 'Home', href: `/${lang}/` },
+    { name: s.pluginsTitle, href: `/${lang}/plugins/` },
+    { name: `#${tag.label}`, href: `/${lang}/${route}` },
+  ])}
+  <div class="section-head"><div><h1 class="page-title">${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p></div>
+  <a class="more" href="/${lang}/plugins/">${escapeHtml(s.viewAll)} →</a></div>
+  <div class="grid">
+${plugins.map((plugin) => card(plugin, lang, summarize(plugin.description, lang))).join('\n')}
+  </div>
+</div>`;
+  return page({
+    lang,
+    site: SITE_URL,
+    title,
+    description,
+    body,
+    active: 'plugins',
+    generatedAt: catalog.generatedAt,
+    headExtra: head({
+      lang,
+      route,
+      title: `${title} - ${s.brand}`,
+      description,
+      siteUrl: SITE_URL,
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: title,
+          inLanguage: HTML_LANG[lang],
+          url: absolute(lang, route),
+          mainEntity: {
+            '@type': 'ItemList',
+            numberOfItems: plugins.length,
+            itemListElement: plugins.map((plugin, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              name: localized(plugin.title, lang),
+              url: absolute(lang, `p/${repoSlug(plugin)}/`),
+            })),
+          },
+        },
+        breadcrumbJsonLd([
+          { name: s.brand, path: `/${lang}/` },
+          { name: s.pluginsTitle, path: `/${lang}/plugins/` },
+          { name: `#${tag.label}`, path: `/${lang}/${route}` },
+        ], SITE_URL),
+      ],
+    }),
+  });
+}
+
 function searchPage(catalog, lang) {
   const s = t(lang);
   const body = `
@@ -654,6 +804,8 @@ async function main() {
     .then((text) => JSON.parse(text))
     .catch(() => readFile(resolve(OUT, 'api/catalog.json'), 'utf8').then((text) => JSON.parse(text)));
   const lastmod = (catalog.generatedAt ?? new Date().toISOString()).slice(0, 10);
+  const tags = buildTags(catalog.plugins);
+  const tagSlugs = new Set(tags.map((tag) => tag.slug));
 
   await mkdir(resolve(OUT, 'assets'), { recursive: true });
   await copyFile(resolve(ROOT, 'site/assets/style.css'), resolve(OUT, 'assets/style.css'));
@@ -698,8 +850,13 @@ async function main() {
       }
     }
 
+    for (const tag of tags) {
+      await write(`${lang}/t/${tag.slug}/index.html`, tagPage(catalog, tag, lang));
+      pages.push(`${lang}/t/${tag.slug}/`);
+    }
+
     for (const plugin of catalog.plugins) {
-      await write(`${lang}/p/${repoSlug(plugin)}/index.html`, detailPage(catalog, plugin, lang));
+      await write(`${lang}/p/${repoSlug(plugin)}/index.html`, detailPage(catalog, plugin, lang, tagSlugs));
       pages.push(`${lang}/p/${repoSlug(plugin)}/`);
     }
   }
@@ -729,12 +886,15 @@ async function main() {
     LANGS.map((lang) => sitemapEntry(absolute(lang, route), lastmod, route)))));
   await write('sitemaps/plugins.xml', sitemapFile(pluginRoutes.flatMap((route) =>
     LANGS.map((lang) => sitemapEntry(absolute(lang, route), lastmodFor(route), route)))));
+  await write('sitemaps/tags.xml', sitemapFile(tags.flatMap((tag) =>
+    LANGS.map((lang) => sitemapEntry(absolute(lang, `t/${tag.slug}/`), lastmod, `t/${tag.slug}/`)))));
 
   await write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>${SITE_URL}/sitemaps/pages.xml</loc><lastmod>${lastmod}</lastmod></sitemap>
   <sitemap><loc>${SITE_URL}/sitemaps/categories.xml</loc><lastmod>${lastmod}</lastmod></sitemap>
   <sitemap><loc>${SITE_URL}/sitemaps/plugins.xml</loc><lastmod>${lastmod}</lastmod></sitemap>
+  <sitemap><loc>${SITE_URL}/sitemaps/tags.xml</loc><lastmod>${lastmod}</lastmod></sitemap>
 </sitemapindex>
 `);
   await write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap.xml\n`);
@@ -744,7 +904,7 @@ async function main() {
 
   process.stdout.write(`✓ ${pages.length + 2} HTML pages across ${LANGS.length} languages\n`);
   process.stdout.write(`  ${catalog.plugins.length} plugins · ${CATEGORIES.length} categories · ${GUIDES.length} guides\n`);
-  process.stdout.write(`  sitemap: ${pluginRoutes.length * 2} plugin URLs, ${pageRoutes.length * 2} page URLs\n`);
+  process.stdout.write(`  sitemap: ${pluginRoutes.length * 2} plugin URLs, ${pageRoutes.length * 2} page URLs, ${tags.length * 2} tag URLs\n`);
 }
 
 await main();

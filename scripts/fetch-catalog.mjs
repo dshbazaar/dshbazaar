@@ -60,9 +60,22 @@ async function readReadme(fullName, branch) {
   for (const name of ['README.md', 'README.zh.md', 'README.zh-CN.md', 'readme.md', 'Readme.md']) {
     const text = await fetchText(`https://raw.githubusercontent.com/${fullName}/${branch}/${name}`);
     if (text === undefined || text.trim() === '') continue;
-    return toPlainText(text).slice(0, 4000);
+    return cleanMarkdown(text).slice(0, 6000);
   }
   return undefined;
+}
+
+/** Keep the Markdown structure a detail page can render; drop badges, images and raw HTML. */
+function cleanMarkdown(markdown) {
+  return markdown
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^\s*\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)\s*$/gm, '')
+    .replace(/^\s*!\[[^\]]*\]\([^)]*\)\s*$/gm, '')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/<\/?[a-zA-Z][^>]*>/g, '')
+    .replace(/\r/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 /** Strip the Markdown scaffolding a README carries; keep headings and sentences. */
