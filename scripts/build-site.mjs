@@ -423,6 +423,13 @@ function homePage(catalog, lang) {
     ${stat(fmtNumber(totals.npm), s.stats.npm)}
     ${stat(fmtNumber(totals.stars), s.stats.stars)}
   </div>
+  <div class="index-badge">
+    <span class="tick">✓</span>
+    <span>${escapeHtml(s.indexBadgeSpec)}</span>
+    <span class="sep">·</span>
+    <span>${escapeHtml(format(s.indexBadgeCount, { n: new Intl.NumberFormat('en-US').format(totals.plugins) }))}</span>
+    <a href="/api/index.json">${escapeHtml(s.indexBadgeLink)}</a>
+  </div>
 </div></section>
 ${installPanelBlock(lang)}
 

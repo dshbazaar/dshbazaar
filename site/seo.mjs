@@ -39,6 +39,7 @@ export function head({
       (alternate) => `<link rel="alternate" hreflang="${alternate.hreflang}" href="${escapeHtml(alternate.href)}">`,
     ),
     `<link rel="canonical" href="${escapeHtml(canonical)}">`,
+    `<link rel="alternate" type="application/json" href="${siteUrl}/api/index.json" title="DSH market index">`,
     `<meta property="og:type" content="${type}">`,
     `<meta property="og:site_name" content="${SITE_NAME}">`,
     `<meta property="og:locale" content="${LOCALES[lang]}">`,
