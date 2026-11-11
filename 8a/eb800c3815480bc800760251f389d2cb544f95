@@ -1,0 +1,20 @@
+scripts/build-site.mjs
+  h_407642ed4ce5a5 426-432
+site/assets/style.css
+  h_407642ed4ce5a5 291-308
+site/i18n.mjs
+  h_407642ed4ce5a5 72-75,197-200
+site/seo.mjs
+  h_407642ed4ce5a5 42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8aeb800c3815480bc800760251f389d2cb544f95",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
