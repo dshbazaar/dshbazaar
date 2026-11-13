@@ -7,6 +7,11 @@
  *
  * Emits only entries that can be installed today: a published npm release, or a git
  * source pinned to the default branch head commit.
+ *
+ * The scan can mark a repository `retained`: it was catalogued before, it still exists,
+ * but it is no longer part of today's sample. Those entries keep their pages (the site
+ * emits them under `retained`) and stay out of the market index, the browsable lists and
+ * the comparison tables.
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -221,9 +226,9 @@ function indexDocument(entries) {
   };
 }
 
-async function main() {
-  const raw = JSON.parse(await readFile(SRC, 'utf8'));
-  const entries = raw.repos
+/** Relevance check, spoof guard and the canonical order shared by both sets. */
+function prepare(repos) {
+  return repos
     .map(entryOf)
     .filter((entry) => entry !== undefined)
     .filter((entry) => {
@@ -235,10 +240,30 @@ async function main() {
       if (left.catalog.verified !== right.catalog.verified) return left.catalog.verified ? -1 : 1;
       return right.catalog.stars - left.catalog.stars;
     });
+}
 
-  const unique = dedupeByName(entries, (message) => process.stdout.write(`${message}\n`));
+const logLine = (message) => process.stdout.write(`${message}\n`);
+
+async function main() {
+  const raw = JSON.parse(await readFile(SRC, 'utf8'));
+  const repos = raw.repos ?? [];
+  const sampled = repos.filter((repo) => repo.retained !== true);
+  const outside = repos.filter((repo) => repo.retained === true);
+
+  // The market index and the browsable lists only carry the current sample.
+  const unique = dedupeByName(prepare(sampled), logLine);
+  const sampleNames = new Set(unique.map((entry) => entry.catalog.name));
+
+  // Pages kept for repositories that left the sample still render, but never enter
+  // the index, the lists or the comparison tables, and never reuse a sampled name.
+  const kept = dedupeByName(
+    prepare(outside).filter((entry) => !sampleNames.has(entry.catalog.name)),
+    logLine,
+  );
+
   const built = unique.map((entry) => entry.indexEntry);
   const catalog = unique.map((entry) => entry.catalog);
+  const retained = kept.map((entry) => ({ ...entry.catalog, retained: true }));
 
   const names = new Set(built.map((entry) => entry.name));
   if (names.size !== built.length) throw new Error('market index contains duplicate package names');
@@ -250,20 +275,24 @@ async function main() {
     siteUrl: SITE_URL,
     totals: {
       plugins: catalog.length,
+      retained: retained.length,
       verified: catalog.filter((plugin) => plugin.verified).length,
       npm: catalog.filter((plugin) => plugin.sourceType === 'npm').length,
       stars: catalog.reduce((sum, plugin) => sum + plugin.stars, 0),
     },
     plugins: catalog,
+    retained,
   };
 
   await writeFile(resolve(OUT_DIR, 'index.json'), `${JSON.stringify(index, null, 2)}\n`);
   // The public catalog stays small: README text is only needed while rendering pages.
   const publicPlugins = catalog.map(({ readme, ...rest }) => rest);
-  await writeFile(resolve(OUT_DIR, 'catalog.json'), `${JSON.stringify({ ...payload, plugins: publicPlugins }, null, 2)}\n`);
+  const publicRetained = retained.map(({ readme, ...rest }) => rest);
+  await writeFile(resolve(OUT_DIR, 'catalog.json'), `${JSON.stringify({ ...payload, plugins: publicPlugins, retained: publicRetained }, null, 2)}\n`);
   await writeFile(resolve(ROOT, 'data/catalog.build.json'), `${JSON.stringify(payload, null, 2)}\n`);
 
   process.stdout.write(`✓ ${catalog.length} plugins · verified ${payload.totals.verified} · npm ${payload.totals.npm}\n`);
+  process.stdout.write(`  ${retained.length} retained pages outside the sample\n`);
   process.stdout.write('  public/api/index.json  (market index format 1)\n');
   process.stdout.write('  public/api/catalog.json (site + in-app plugin)\n');
 }

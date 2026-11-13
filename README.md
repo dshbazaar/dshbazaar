@@ -26,13 +26,18 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `GITHUB_TOKEN` | 空 | 提高 GitHub API 限额；不会被打印或写进产物 |
-| `DSH_MARKET_LIMIT` | `100` | 收录仓库数上限（≤ 3000） |
+| `DSH_MARKET_TOP_STARS` | `1000` | 按 star 排名收录的前 N 个仓库 |
+| `DSH_MARKET_NEW_DAYS` | `30` | 新插件窗口（天） |
+| `DSH_MARKET_NEW_TOP` | `200` | 该窗口内额外收录的仓库数（0 关闭） |
+| `DSH_MARKET_LIMIT` | `1200` | 抽样总量硬上限（≤ 3000） |
+| `DSH_MARKET_RETAIN_MAX` | `1500` | 抽样之外保留页面的上限（按 star 排序） |
+| `DSH_MARKET_STATE` | `.catalog-state.json` | 已收录仓库状态文件，用于保留页面 |
 | `DSH_MARKET_SITE_URL` | `https://dshbazaar.io` | 站点绝对地址，用于 sitemap 与索引里的 icon 解析 |
 
 ## 产物
 
 - `public/api/index.json` — **市场索引 format 1**，DSH 自带 `dsh-plugin-market` 直接读这个格式。已用 DSH 内置的 `parseMarketIndex` 校验通过。
-- `public/api/catalog.json` — 站点与应用内插件渲染的扁平目录（含 `installSpec`、star、更新时间等）。
+- `public/api/catalog.json` — 站点与应用内插件渲染的扁平目录（含 `installSpec`、star、更新时间等）。`plugins` 是当天的抽样，`retained` 是保留页面对应的条目。
 - `public/{zh,en}/…` — 首页、分页列表、11 个分类页、每个插件的详情页（含渲染后的仓库 README）、话题标签页（`/t/…`）、教程、提交与关于页。
 - `public/sitemap.xml` 是索引，指向 `sitemaps/pages.xml`、`categories.xml`、`plugins.xml`、`tags.xml`；每个 URL 带 `lastmod`（插件页按仓库最近推送时间）与 `zh-CN / en / x-default` 三条 alternate。
 
@@ -52,6 +57,21 @@ node scripts/serve.mjs 4188        # http://127.0.0.1:4188/zh/
 6. 能通过市场索引 format 1 校验才会写进 `index.json`；构建末尾还会再断言一次包名唯一。
 
 `verified` 只表示**仓库声明了 `dsh.bundle.patch`**，不代表安全审计。收录不是背书。
+
+## 抽样与保留页
+
+话题下有 3 万多个仓库，站点只维护一个固定大小的抽样，而不是镜像：按 star 排名的前 `DSH_MARKET_TOP_STARS` 个，加上 `DSH_MARKET_NEW_DAYS` 天内新建的前 `DSH_MARKET_NEW_TOP` 个。
+
+抽样的边界每天都在动。为了让详情页 URL 不跟着消失：
+
+- `.catalog-state.json` 记录所有曾经收录过的仓库；下次构建时，掉出抽样的仓库会被单独复核一遍；
+- 仓库仍存在且未归档 → 继续生成详情页（数据照常从 GitHub 现拉），但**不进列表、标签页、首页和 `index.json`**，排在 `catalog.json` 的 `retained` 里；
+- 仓库 404 或已归档 → 页面下架；
+- 复核失败（限流、超时）不算下架，下次构建重试。
+
+`.catalog-state.json` 是种子文件 + CI 缓存：本地没有缓存时会从仓库里那份开始。抽样之外的保留页面超过 `DSH_MARKET_RETAIN_MAX` 时，按 star 从低到高淘汰。
+
+> GitHub Pages 不能按路径返回 410，下架的页面只能退回 404。要让「已删除」和「不存在」在状态码上区分，需要在前面加一层能设响应头的 CDN。
 
 ## 应用内插件
 

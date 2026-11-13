@@ -324,6 +324,7 @@ function detailPage(catalog, plugin, lang, tagSlugs = new Set()) {
       ${plugin.archived ? '<span class="badge">archived</span>' : ''}
     </div>
     <p class="lede">${escapeHtml(localized(plugin.description, lang))}</p>
+    ${plugin.retained === true ? `<p style="color:var(--muted);font-size:14px;margin:8px 0 0">${escapeHtml(s.detailRetained)}</p>` : ''}
     ${tagLinks}
 
     <h2>${escapeHtml(s.detailPositioning)}</h2>
@@ -845,7 +846,12 @@ async function main() {
     .then((text) => JSON.parse(text))
     .catch(() => readFile(resolve(OUT, 'api/catalog.json'), 'utf8').then((text) => JSON.parse(text)));
   const lastmod = (catalog.generatedAt ?? new Date().toISOString()).slice(0, 10);
-  const tags = buildTags(catalog.plugins);
+  // Pages exist for the sample and for repositories kept from earlier samples; lists,
+  // tags and search describe the sample only.
+  const plugins = catalog.plugins;
+  const retained = Array.isArray(catalog.retained) ? catalog.retained : [];
+  const allPlugins = [...plugins, ...retained];
+  const tags = buildTags(plugins);
   const tagSlugs = new Set(tags.map((tag) => tag.slug));
 
   await mkdir(resolve(OUT, 'assets'), { recursive: true });
@@ -896,14 +902,14 @@ async function main() {
       pages.push(`${lang}/t/${tag.slug}/`);
     }
 
-    for (const plugin of catalog.plugins) {
+    for (const plugin of allPlugins) {
       await write(`${lang}/p/${repoSlug(plugin)}/index.html`, detailPage(catalog, plugin, lang, tagSlugs));
       pages.push(`${lang}/p/${repoSlug(plugin)}/`);
     }
   }
 
   for (const lang of LANGS) {
-    const rows = catalog.plugins.map((plugin) => ({
+    const rows = allPlugins.map((plugin) => ({
       n: plugin.name,
       t: localized(plugin.title, lang),
       d: summarize(plugin.description, lang, 110),
@@ -920,8 +926,8 @@ async function main() {
   await write('404.html', notFoundPage('zh'));
 
   // Three sitemaps plus an index, each URL carrying lastmod and hreflang alternates.
-  const pluginRoutes = catalog.plugins.map((plugin) => `p/${repoSlug(plugin)}/`);
-  const pluginLastmod = new Map(catalog.plugins.map((plugin) => [
+  const pluginRoutes = allPlugins.map((plugin) => `p/${repoSlug(plugin)}/`);
+  const pluginLastmod = new Map(allPlugins.map((plugin) => [
     `p/${repoSlug(plugin)}/`,
     (plugin.updatedAt ?? catalog.generatedAt).slice(0, 10),
   ]));
@@ -957,7 +963,7 @@ async function main() {
   await write('.nojekyll', '');
 
   process.stdout.write(`✓ ${pages.length + 2} HTML pages across ${LANGS.length} languages\n`);
-  process.stdout.write(`  ${catalog.plugins.length} plugins · ${CATEGORIES.length} categories · ${GUIDES.length} guides\n`);
+  process.stdout.write(`  ${plugins.length} plugins · ${retained.length} retained pages · ${CATEGORIES.length} categories · ${GUIDES.length} guides\n`);
   process.stdout.write(`  sitemap: ${pluginRoutes.length * 2} plugin URLs, ${pageRoutes.length * 2} page URLs, ${tags.length * 2} tag URLs\n`);
 }
 

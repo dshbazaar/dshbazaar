@@ -18,6 +18,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # Carries the repositories catalogued by earlier runs, so their pages survive a
+      # drop out of the daily sample. Falls back to the committed seed on a cold cache.
+      - name: Restore catalog state
+        uses: actions/cache@v4
+        with:
+          path: .catalog-state.json
+          key: catalog-state-${{ github.run_id }}
+          restore-keys: catalog-state-
       - name: Scan the dsh-plugin topic
         run: node scripts/fetch-catalog.mjs
         env:
