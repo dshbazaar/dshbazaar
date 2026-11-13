@@ -1,0 +1,28 @@
+.catalog-state.json
+  h_407642ed4ce5a5 1
+.github/workflows/catalog.yml
+  h_407642ed4ce5a5 21-28
+README.md
+  h_407642ed4ce5a5 29-34,40,61-75
+docs/decisions.md
+  h_407642ed4ce5a5 35-51
+scripts/build-index.mjs
+  h_407642ed4ce5a5 10-14,229-231,243-262,266,278,284,290-291,295
+scripts/build-site.mjs
+  h_407642ed4ce5a5 327,849-854,905,912,929-930,966
+scripts/fetch-catalog.mjs
+  h_407642ed4ce5a5 7-12,14-20,23,33-38,41-43,45-53,207,212-213,217-244,246,249,260,267-269,272-294,301-310,316-324,329-334,336-338
+site/i18n.mjs
+  h_407642ed4ce5a5 44,170
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2ece7710d3230505300201613af6c95028bf6276",
+  "prompts": {},
+  "humans": {
+    "h_407642ed4ce5a5": {
+      "author": "haotrr <haotrrdot@gmail.com>"
+    }
+  }
+}
